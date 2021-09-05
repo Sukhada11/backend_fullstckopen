@@ -93,7 +93,7 @@ const unknownEndpoint = (request, response) => {
 }
 app.use(unknownEndpoint)
 
-var port =  3001;
-app.listen(port, function() {
+const port = process.env.PORT || 3000;
+app.listen(port, "0.0.0.0", function() {
     console.log("Listening on Port 3000");
 });
