@@ -5,6 +5,7 @@ var morgan = require('morgan')
 app.use(morgan("tiny"));
 const cors = require('cors')
 app.use(cors())
+app.use(express.static('build'))
 let persons = [
     { 
       "id": 1,
@@ -93,7 +94,7 @@ const unknownEndpoint = (request, response) => {
 }
 app.use(unknownEndpoint)
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 app.listen(port, "0.0.0.0", function() {
     console.log("Listening on Port 3000");
 });
