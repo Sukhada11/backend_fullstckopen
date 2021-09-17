@@ -1,14 +1,18 @@
 const express = require('express')
+const mongoose = require('mongoose')
+require('dotenv').config()
 const app = express()
 app.use(express.json())
+
 var morgan = require('morgan')
 app.use(morgan("tiny"));
 const cors = require('cors')
 app.use(cors())
 app.use(express.static('build'))
-const Person = require('./model/person')
-const person = require("../fullStackOpen/part2_altering_data_in_server_exe/src/services/person");
+const Person = require('./model/person.cjs')
 require('dotenv').config()
+
+
 /*let persons = [
     {
       "id": 1,
@@ -38,12 +42,12 @@ app.get('/api/persons/:id', (request, response) => {
     })
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    Person.findByIdAndDelete(request.params.id ).then(person=> {
-        response.status(204).end()
-    })
-
+app.delete('/api/persons/:id', (request, response,next) => {
+    Person.findByIdAndRemove(request.params.id)
+        .then(result => {
+            response.status(204).end()
+        })
+        .catch(error => next(error))
 })
 
 app.get('/api/persons', (request, response) => {
@@ -70,16 +74,17 @@ app.get('/info', (request, response) => {
         )
 })
 
+
+
+
 app.post('/api/persons', (request, response) => {
     const body = request.body
-/*    const maxId = persons.length > 0
-        ? Math.max(...persons.map(n => n.id))
-        : 0
+    console.log(body)
     if (body.name === undefined) {
         return response.status(400).json({
             error: "name missing"
         });
-    }*/
+    }
 
     if (body.number === undefined) {
         return response.status(400).json({
@@ -87,19 +92,20 @@ app.post('/api/persons', (request, response) => {
         });
     }
 
-    //const id = maxId + 1
 
     const personName = body.name
     const personNumber = body.number
-    const person = {
-        id : id,
+    const person = new Person( {
+
         name: personName,
         number: personNumber
 
-    }
-    person.save().then(savedPerson => {
-        response.json(savedPerson)
     })
+    console.log(person)
+    person.save().then(savedPerson => {
+            response.json(savedPerson.toJson())
+        }
+    )
 
 })
 
@@ -108,7 +114,21 @@ const unknownEndpoint = (request, response) => {
 }
 app.use(unknownEndpoint)
 
-const port = process.env.PORT || 3001;
-app.listen(port, "0.0.0.0", function() {
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' })
+    }
+
+    next(error)
+}
+
+// this has to be the last loaded middleware.
+app.use(errorHandler)
+
+const PORT = process.env.PORT;
+app.listen(PORT, "0.0.0.0", function() {
     console.log("Listening on Port 3000");
 });
